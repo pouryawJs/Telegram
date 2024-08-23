@@ -46,4 +46,4 @@ const namespaceSchema = new mongoose.Schema(
 
 const namespaceModel = mongoose.model("Chat", namespaceSchema);
 
-module.exports = model;
+module.exports = namespaceModel;
