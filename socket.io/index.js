@@ -1,6 +1,7 @@
-const { initConnection } = require("./namespaces.socket");
+const { initConnection, getNamespacesRooms } = require("./namespaces.socket");
 
 const socketHandler = (io) => {
     initConnection(io);
+    getNamespacesRooms(io);
 };
-modul.exports = socketHandler;
+module.exports = socketHandler;
