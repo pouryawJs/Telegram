@@ -12,6 +12,20 @@ exports.getNamespacesRooms = async (io) => {
     namespaces.forEach((namespace) => {
         io.of(namespace.href).on("connection", (socket) => {
             socket.emit("namespaceRooms", namespace.rooms);
+
+            socket.on("joining", (roomTitle) => {
+                const joinedRoom = Array.from(socket.rooms)[1];
+
+                if (joinedRoom) {
+                    socket.leave(joinedRoom);
+                }
+                socket.join(roomTitle);
+
+                const roomInfo = namespace.rooms.find(
+                    (room) => room.title === roomTitle
+                );
+                socket.emit("roomInfo", roomInfo);
+            });
         });
     });
 };

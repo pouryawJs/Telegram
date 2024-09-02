@@ -1,80 +1,87 @@
-export const showNamespaces = (namespaces) => {
-  const chatCategories = document.querySelector(".sidebar__categories-list");
-  chatCategories.innerHTML = "";
+let socket = null;
+let namespaceSocket = null;
 
-  namespaces.forEach((namespace, index) => {
-    chatCategories.insertAdjacentHTML(
-      "beforeend",
-      `
+export const showNamespaces = (namespaces, socketConnection) => {
+    socket = socketConnection;
+
+    const chatCategories = document.querySelector(".sidebar__categories-list");
+    chatCategories.innerHTML = "";
+
+    getNamespaceChats(namespaces[0].href);
+
+    namespaces.forEach((namespace, index) => {
+        chatCategories.insertAdjacentHTML(
+            "beforeend",
+            `
               <li data-title="${
-                namespace.title
+                  namespace.title
               }" class="sidebar__categories-item ${
-        index === 0 && "sidebar__categories-item--active"
-      }" data-category-name="all">
+                index === 0 && "sidebar__categories-item--active"
+            }" data-category-name="all">
                 <span class="sidebar__categories-text">${namespace.title}</span>
                 <!-- <span class="sidebar__categories-counter sidebar__counter">3</span> -->
             </li>
           `
-    );
-  });
+        );
+    });
 };
 
 export const showActiveNamespace = (namespaces) => {
-  let sidebarCategoriesItem = document.querySelectorAll(
-    ".sidebar__categories-item"
-  );
-  sidebarCategoriesItem.forEach((item) => {
-    item.addEventListener("click", function (e) {
-      const namespaceTitle = item.dataset.title;
-      const mainNamespace = namespaces.find(
-        (namespace) => namespace.title === namespaceTitle
-      );
-      getNamespaceChats(mainNamespace.href);
+    let sidebarCategoriesItem = document.querySelectorAll(
+        ".sidebar__categories-item"
+    );
+    sidebarCategoriesItem.forEach((item) => {
+        item.addEventListener("click", function (e) {
+            const namespaceTitle = item.dataset.title;
+            const mainNamespace = namespaces.find(
+                (namespace) => namespace.title === namespaceTitle
+            );
 
-      let activeSidebarCategoriesItem = document.querySelector(
-        ".sidebar__categories-item.sidebar__categories-item--active"
-      );
+            getNamespaceChats(mainNamespace.href);
 
-      activeSidebarCategoriesItem.classList.remove(
-        "sidebar__categories-item--active"
-      );
+            let activeSidebarCategoriesItem = document.querySelector(
+                ".sidebar__categories-item.sidebar__categories-item--active"
+            );
 
-      e.currentTarget.classList.add("sidebar__categories-item--active");
+            activeSidebarCategoriesItem.classList.remove(
+                "sidebar__categories-item--active"
+            );
 
-      let categoryName = e.currentTarget.dataset.categoryName;
-      let selectedCategory = document.querySelector(
-        `.data-category-${categoryName}`
-      );
-      let selectedCategoryActive = document.querySelector(
-        `.sidebar__contact.sidebar__contact--active`
-      );
-      selectedCategoryActive.classList.remove("sidebar__contact--active");
-      selectedCategory.classList.add("sidebar__contact--active");
+            e.currentTarget.classList.add("sidebar__categories-item--active");
+
+            let categoryName = e.currentTarget.dataset.categoryName;
+            let selectedCategory = document.querySelector(
+                `.data-category-${categoryName}`
+            );
+            let selectedCategoryActive = document.querySelector(
+                `.sidebar__contact.sidebar__contact--active`
+            );
+            selectedCategoryActive.classList.remove("sidebar__contact--active");
+            selectedCategory.classList.add("sidebar__contact--active");
+        });
     });
-  });
 };
 
 export const getNamespaceChats = (namespaceHref) => {
-  const namespaceSocket = io(`http://localhost:4003${namespaceHref}`);
+    if (namespaceSocket) namespaceSocket.close();
+    namespaceSocket = io(`http://localhost:4003${namespaceHref}`);
 
-  namespaceSocket.on("connect", () => {
-    namespaceSocket.on("namespaceRooms", (rooms) => {
-      showNamespaceChats(rooms);
+    namespaceSocket.on("connect", () => {
+        namespaceSocket.on("namespaceRooms", (rooms) => {
+            showNamespaceChats(rooms);
+        });
     });
-  });
 };
 
 export const showNamespaceChats = (rooms) => {
-  const chats = document.querySelector(".sidebar__contact-list");
-  chats.innerHTML = "";
+    const chats = document.querySelector(".sidebar__contact-list");
+    chats.innerHTML = "";
 
-  console.log(rooms);
-
-  rooms.forEach((room) => {
-    chats.insertAdjacentHTML(
-      "beforeend",
-      `
-          <li class="sidebar__contact-item">
+    rooms.forEach((room) => {
+        chats.insertAdjacentHTML(
+            "beforeend",
+            `
+          <li class="sidebar__contact-item" data-room="${room.title}">
             <a class="sidebar__contact-link" href="#">
               <div class="sidebar__contact-left">
                 <div class="sidebar__contact-left-left">
@@ -96,6 +103,47 @@ export const showNamespaceChats = (rooms) => {
             </a>
           </li>
       `
-    );
-  });
+        );
+    });
+
+    setClickOnChats();
+};
+
+const setClickOnChats = () => {
+    const chats = document.querySelectorAll(".sidebar__contact-item");
+    chats.forEach((chat) => {
+        chat.addEventListener("click", () => {
+            const roomName = chat.dataset.room;
+            namespaceSocket.emit("joining", roomName);
+
+            namespaceSocket.on("roomInfo", (roomInfo) => {
+                const chatHeader = document.querySelector(".chat__header");
+                chatHeader.classList.add("chat__header--active");
+
+                const chatContent = document.querySelector(".chat__content");
+                chatContent.classList.add("chat__content--active");
+
+                const chatName = document.querySelector(".chat__header-name");
+                chatName.innerHTML = roomInfo.title;
+
+                const chatAvatar = document.querySelector(
+                    ".chat__header-avatar"
+                );
+                chatAvatar.src = `http://localhost:4003/${roomInfo.image}`;
+            });
+
+            getAndShowRoomOnlineUsers();
+        });
+    });
+};
+
+const getAndShowRoomOnlineUsers = () => {
+    namespaceSocket.on("onlineUsersCount", (count) => {
+        const chatOnlineUsersCount = document.querySelector(
+            ".chat__header-status"
+        );
+        chatOnlineUsersCount.innerHTML = `${count} Users online`;
+
+        console.log("onlineUsersCount ->", count);
+    });
 };
