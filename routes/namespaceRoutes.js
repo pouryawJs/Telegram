@@ -1,10 +1,13 @@
 const express = require("express");
-const namespaceController = require("../controllers/namespaceController.js");
+const NamespaceController = require("./../controllers/namespaceController");
+const { multerStorage } = require("./../middlewares/multer");
+
 const router = express.Router();
 
-router.get("/", namespaceController.getAll);
-router.post("/", namespaceController.create);
+const uploader = multerStorage("public/rooms");
 
-router.post("/rooms", namespaceController.createRoom);
+router.get("/", NamespaceController.getAll);
+router.post("/", NamespaceController.create);
+router.post("/rooms", uploader.single("media"), NamespaceController.createRoom);
 
 module.exports = router;

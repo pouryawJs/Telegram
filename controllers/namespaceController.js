@@ -34,6 +34,7 @@ exports.create = async (req, res, next) => {
 exports.createRoom = async (req, res, next) => {
 	try {
 		const { title, namespace } = req.body;
+		let image = null;
 
 		const mainNamespace = await NamespaceModel.findOne({
 			title: namespace,
@@ -50,7 +51,11 @@ exports.createRoom = async (req, res, next) => {
 				.status(400)
 				.json({ message: "room has been created before" });
 		}
-		const room = { title, image: "sds122" };
+
+		if (req.file) {
+			image = `rooms/${req.file.filename}`;
+		}
+		const room = { title, image: image ? image : undefined };
 
 		await NamespaceModel.findOneAndUpdate(
 			{ title: namespace },
