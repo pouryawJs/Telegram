@@ -13,6 +13,20 @@ exports.getNameSpacesRooms = async (io) => {
 	namespaces.forEach((namespace) => {
 		io.of(namespace.href).on("connection", (socket) => {
 			socket.emit("namespaceRooms", namespace.rooms);
+
+			socket.on("joining", async (newRoom) => {
+				const lastRoom = Array.from(socket.rooms)[1];
+				console.log(socket.rooms);
+				if (lastRoom) {
+					socket.leave(lastRoom);
+				}
+
+				socket.join(newRoom);
+				const newRoomInfo = namespace.rooms.find(
+					(room) => room.title === newRoom
+				);
+				socket.emit("roomInfo", newRoomInfo);
+			});
 		});
 	});
 };
