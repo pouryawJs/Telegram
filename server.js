@@ -2,8 +2,9 @@ const { default: mongoose } = require("mongoose");
 const http = require("http");
 const app = require("./app");
 require("dotenv").config();
+
 const socketIoConnection = require("./utils/socketConnection");
-const { initConnection } = require("./socket.io/namespaces.socket");
+const { socketHandler } = require("./socket.io/index");
 
 const connecctToDB = async () => {
 	try {
@@ -21,9 +22,9 @@ const start = () => {
 
 	//IO
 	const io = socketIoConnection(server);
-	initConnection(io);
+	socketHandler(io);
 
-	app.listen(port, () => {
+	server.listen(port, () => {
 		console.log(`Server is Running On port ${port}`);
 	});
 };
