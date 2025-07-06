@@ -18,17 +18,29 @@ exports.getNameSpacesRooms = async (io) => {
 
 			socket.on("joining", async (newRoom) => {
 				const lastRoom = Array.from(socket.rooms)[1];
-				console.log(socket.rooms);
 				if (lastRoom) {
 					socket.leave(lastRoom);
+					await getRoomOnlineUsers(io, mainNamespace.href, lastRoom);
 				}
 
 				socket.join(newRoom);
+				await getRoomOnlineUsers(io, mainNamespace.href, newRoom);
 				const newRoomInfo = mainNamespace.rooms.find(
 					(room) => room.title === newRoom
 				);
 				socket.emit("roomInfo", newRoomInfo);
+
+				socket.on("disconnect", async () => {
+					await getRoomOnlineUsers(io, mainNamespace.href, newRoom);
+				});
 			});
 		});
 	});
+};
+
+const getRoomOnlineUsers = async (io, href, room) => {
+	const onlienUsers = await io.of(href).in(room).allSockets();
+	io.of(href)
+		.in(room)
+		.emit("onlineUsersCount", Array.from(onlienUsers).length);
 };
