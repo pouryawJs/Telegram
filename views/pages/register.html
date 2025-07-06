@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<link rel="stylesheet" href="./../public/css/register.css" />
+	</head>
+	<body>
+		<form class="box" action="" method="POST" target="_self">
+			<h1>Auth</h1>
+			<input
+				type="text"
+				name="name"
+				id="username"
+				placeholder="Username"
+				autocomplete="off"
+			/>
+			<input
+				type="text"
+				name="password"
+				id="password"
+				placeholder="password"
+				autocomplete="off"
+			/>
+			<input type="submit" id="submit" value="Register / Login" />
+		</form>
+
+		<script>
+			const $ = document;
+			const usernameInput = $.querySelector("#username");
+			const passwordInput = $.querySelector("#password");
+			const authBtn = $.querySelector("#submit");
+
+			authBtn.addEventListener("click", async (event) => {
+				event.preventDefault();
+
+				const user = {
+					username: usernameInput.value,
+					password: passwordInput.value,
+				};
+
+				const res = await fetch("http://localhost:4003/api/auth", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(user),
+				});
+
+				console.log(res);
+
+				if (res.status === 201 || res.status === 200) {
+					const data = await res.json();
+					localStorage.setItem("token", data.token);
+					location.href = "./../index.html";
+				}
+			});
+		</script>
+	</body>
+</html>

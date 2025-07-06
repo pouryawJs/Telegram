@@ -4,7 +4,13 @@ import {
   sendMessage,
 } from "../../utils/funcs.js";
 
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
+  // const res = await fetch("http://localhost:4003/apu/auth/me");
+  // if (res.status === 200) {
+  //   const user = await res.json();
+  //   console.log("User ->", user);
+  // }
+
   const socket = io("http://localhost:4003");
 
   socket.on("connect", () => {
