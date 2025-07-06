@@ -11,8 +11,10 @@ exports.getNameSpacesRooms = async (io) => {
 	const namespaces = await NamespaceModel.find({}).lean();
 
 	namespaces.forEach((namespace) => {
-		io.of(namespace.href).on("connection", (socket) => {
-			socket.emit("namespaceRooms", namespace.rooms);
+		io.of(namespace.href).on("connection", async (socket) => {
+			const mainNamespace = await NamespaceModel.findById(namespace._id);
+
+			socket.emit("namespaceRooms", mainNamespace.rooms);
 
 			socket.on("joining", async (newRoom) => {
 				const lastRoom = Array.from(socket.rooms)[1];
@@ -22,7 +24,7 @@ exports.getNameSpacesRooms = async (io) => {
 				}
 
 				socket.join(newRoom);
-				const newRoomInfo = namespace.rooms.find(
+				const newRoomInfo = mainNamespace.rooms.find(
 					(room) => room.title === newRoom
 				);
 				socket.emit("roomInfo", newRoomInfo);
