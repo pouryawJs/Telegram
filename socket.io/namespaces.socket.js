@@ -30,6 +30,8 @@ exports.getNameSpacesRooms = async (io) => {
 				);
 				socket.emit("roomInfo", newRoomInfo);
 
+				getMessages(socket);
+
 				socket.on("disconnect", async () => {
 					await getRoomOnlineUsers(io, mainNamespace.href, newRoom);
 				});
@@ -43,4 +45,26 @@ const getRoomOnlineUsers = async (io, href, room) => {
 	io.of(href)
 		.in(room)
 		.emit("onlineUsersCount", Array.from(onlienUsers).length);
+};
+
+const getMessages = (socket) => {
+	socket.on("newMsg", async (data) => {
+		const { message, roomName } = data;
+
+		const namespace = await NamespaceModel.findOne({
+			"rooms.title": roomName,
+		});
+
+		await NamespaceModel.findOneAndUpdate(
+			{ _id: namespace._id, "rooms.title": roomName },
+			{
+				$push: {
+					"rooms.$.messages": {
+						sender: "67f78872ae4f756ee589bc4e",
+						message,
+					},
+				},
+			}
+		);
+	});
 };
