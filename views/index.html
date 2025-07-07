@@ -14,9 +14,17 @@
 			rel="stylesheet"
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 		/>
+
 		<link rel="stylesheet" href="public/css/media.css" />
 		<link rel="stylesheet" href="public/css/common.css" />
 		<link rel="stylesheet" href="public/css/style.css" />
+
+		<link
+			rel="stylesheet"
+			href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+			integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+			crossorigin=""
+		/>
 	</head>
 
 	<body>
@@ -1267,19 +1275,18 @@
 									<i
 										class="chat__content-bottom-bar-icon-left tgico button-icon laugh-icon"
 									></i>
-									<i
-										class="chat__content-bottom-bar-icon-right tgico button-icon file-icon"
-									></i>
+
+									<div class="upload-button">
+										<i
+											class="chat__content-bottom-bar-icon-right tgico button-icon file-icon"
+										>
+										</i>
+										<input type="file" id="file-input" />
+									</div>
+
 									<i
 										class="location-icon chat__content-bottom-bar-icon-right fas fa-map-marker-alt"
 									></i>
-
-									<input
-										type="file"
-										id="file-input"
-										class="chat__content-bottom-bar-icon-right fas fa-map-marker-alt"
-										style="margin-right: 60px"
-									/>
 								</div>
 								<div class="chat__content-bottom-bar-right">
 									<i
@@ -1503,7 +1510,7 @@
 		<script
 			src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 			integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-			crossorigin
+			crossorigin=""
 		></script>
 		<script src="public/js/script.js"></script>
 		<script src="public/js/app.js" type="module"></script>

@@ -1,5 +1,7 @@
 const NamespaceModel = require("./../models/Chat");
 const UserModel = require("./../models/User");
+const path = require("path");
+const fs = require("fs");
 
 exports.initConnection = (io) => {
 	io.on(`connection`, async (socket) => {
@@ -18,6 +20,7 @@ exports.getNameSpacesRooms = async (io) => {
 			socket.emit("namespaceRooms", mainNamespace.rooms);
 
 			getMessages(socket, io);
+			getMedia(socket, io);
 
 			socket.on("joining", async (newRoom) => {
 				mainNamespace = await NamespaceModel.findById(namespace._id);
@@ -92,5 +95,33 @@ const detectIsTyping = (socket, io) => {
 			.emit("isTyping", { isTyping, username: user.username });
 
 		if (!isTyping) getRoomOnlineUsers(io, namespace.href, roomName);
+	});
+};
+
+const getMedia = (socket, io) => {
+	socket.on("newMedia", async (data) => {
+		const { filename, file, sender, roomName } = data;
+		const namespace = await NamespaceModel.findOne({
+			"rooms.title": roomName,
+		});
+		const ext = path.extname(filename);
+		const mediaPath = `/uploads/${String(Date.now() + ext)}`;
+
+		fs.writeFile(`public/${mediaPath}`, file, async (err) => {
+			if (!err) {
+				await NamespaceModel.findOneAndUpdate(
+					{ _id: namespace._id, "rooms.title": roomName },
+					{
+						$push: {
+							"rooms.$.medias": {
+								sender,
+								path: mediaPath,
+							},
+						},
+					}
+				);
+				io.of(namespace.href).in(roomName).emit("confirmMedia", data);
+			}
+		});
 	});
 };

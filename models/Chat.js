@@ -15,12 +15,30 @@ const messageSchema = new mongoose.Schema(
 	{ timestamps: true, versionKey: false }
 );
 
+const mediaSchema = new mongoose.Schema(
+	{
+		sender: {
+			type: mongoose.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		path: {
+			type: String,
+			required: true,
+		},
+	},
+	{ timestamps: true, versionKey: false }
+);
 const roomSchema = new mongoose.Schema(
 	{
 		title: { type: String, required: true },
 		image: { type: String, required: true },
 		messages: {
 			type: [messageSchema],
+			default: [],
+		},
+		medias: {
+			type: [mediaSchema],
 			default: [],
 		},
 	},

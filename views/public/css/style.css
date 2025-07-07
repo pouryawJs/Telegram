@@ -795,6 +795,26 @@
   margin-right: 3rem;
 }
 
+/* leaflet map */
+.map-receiver {
+  height: 230px;
+  width: 100%;
+  z-index: 0;
+  margin-left: -4px;
+  border-radius: 8px;
+}
+.map-sender {
+  height: 230px;
+  width: 100%;
+  z-index: 0;
+  margin-left: -4px;
+  border-radius: 8px;
+}
+.chat__content-map {
+  width: 100%;
+}
+/* leaflet map close */
+
 @media screen and (max-width: 1400px) {
   .chat {
     padding: 7.1rem 3rem 8rem;
@@ -847,4 +867,24 @@
   .sidebar-bottom-btn {
     margin: 20px;
   }
+}
+
+.upload-button {
+  /* position: relative; */
+  max-width: 50px;
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  cursor: pointer;
+}
+
+.upload-button input[type="file"] {
+  position: absolute;
+  cursor: pointer;
+  width: 37px;
+  height: 50px;
+  opacity: 0;
+  right: 0;
+  top: 17px;
 }

@@ -98,3 +98,15 @@ function closeSideBarHandler() {
   sideBarParent.classList.toggle("sideBar-hide");
   mainConainer.classList.toggle("container-hide");
 }
+
+function addLocation(id, x, y) {
+  var mapElem = L.map(id).setView([x, y], 13);
+
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(mapElem);
+
+  L.marker([x, y]).addTo(mapElem);
+}
