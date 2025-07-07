@@ -38,7 +38,19 @@ exports.auth = async (req, res, next) => {
 
 exports.me = async (req, res, next) => {
 	try {
-		// Codes
+		const authorization = req.headers["authorization"].split(" ")[1];
+
+		if (authorization) {
+			const payload = jwt.decode(authorization);
+			const user = await UserModel.findOne({ _id: payload._id });
+			if (user) {
+				return res.json(user);
+			} else {
+				return res.status(404).json(user);
+			}
+		} else {
+			return res.status(404).json(null);
+		}
 	} catch (err) {
 		next(err);
 	}
