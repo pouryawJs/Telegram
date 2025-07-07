@@ -1,4 +1,5 @@
 const NamespaceModel = require("./../models/Chat");
+const UserModel = require("./../models/User");
 
 exports.initConnection = (io) => {
 	io.on(`connection`, async (socket) => {
@@ -72,5 +73,24 @@ const getMessages = (socket, io) => {
 		io.of(namespace.href)
 			.in(roomName)
 			.emit("confirmMsg", { message, sender });
+	});
+
+	detectIsTyping(socket, io);
+};
+
+const detectIsTyping = (socket, io) => {
+	socket.on("isTyping", async (data) => {
+		const { userID, roomName, isTyping } = data;
+
+		const namespace = await NamespaceModel.findOne({
+			"rooms.title": roomName,
+		});
+		const user = await UserModel.findById(userID);
+
+		io.of(namespace.href)
+			.in(roomName)
+			.emit("isTyping", { isTyping, username: user.username });
+
+		if (!isTyping) getRoomOnlineUsers(io, namespace.href, roomName);
 	});
 };

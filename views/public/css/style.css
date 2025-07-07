@@ -66,7 +66,7 @@
 .animated-menu-icon::after {
   position: absolute;
   left: 0px;
-  content: '';
+  content: "";
 }
 
 .sidebar__searchbar-input {
@@ -129,7 +129,7 @@
 }
 
 .sidebar__counter {
-  font-family: 'roboto-medium';
+  font-family: "roboto-medium";
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,7 +213,7 @@
 }
 
 .chat {
-  background: url('../images/bg.png');
+  background: url("../images/bg.png");
   height: 100vh;
   position: relative;
   padding: 7.1rem 25rem 8rem;
@@ -338,7 +338,7 @@
 .chat__header-phone-icon::before {
   vertical-align: middle;
   font-size: 24px;
-  content: '';
+  content: "";
   color: var(--gray-color);
   font-family: icons !important;
 }
@@ -384,7 +384,7 @@
   background-color: var(--secondary-color);
 }
 .bubble-tail::before {
-  content: '';
+  content: "";
 }
 .chat__content-sender,
 .chat__content-receiver {
@@ -472,12 +472,12 @@
   cursor: pointer;
 }
 .laugh-icon::before {
-  content: '\E9EA';
+  content: "\E9EA";
   color: var(--gray-color);
   font-family: icons !important;
 }
 .file-icon::before {
-  content: '\E910';
+  content: "\E910";
   color: var(--gray-color);
   font-family: icons !important;
 }
@@ -586,7 +586,7 @@
 }
 
 .sidebar__categories-item--active::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0px;
   right: 0px;
@@ -675,8 +675,8 @@
   pointer-events: none;
 }
 
-[type='checkbox'],
-[type='radio'] {
+[type="checkbox"],
+[type="radio"] {
   box-sizing: border-box;
   padding: 0;
   opacity: 0;
@@ -685,7 +685,7 @@
 }
 
 .checkbox-field-toggle
-  [type='checkbox']:checked:not(.is-fake-disabled)
+  [type="checkbox"]:checked:not(.is-fake-disabled)
   + .checkbox-toggle {
   background-color: var(--primary-color);
 }
@@ -708,7 +708,7 @@
   height: 20px;
   border: 2px solid var(--primary-color);
   background-color: #212121;
-  content: ' ';
+  content: " ";
   transform: translateX(15px);
   border-radius: 50%;
   position: absolute;
@@ -789,6 +789,10 @@
 }
 .sidebar__contact .sidebar__counter-active {
   background-color: var(--primary-color);
+}
+
+.location-icon {
+  margin-right: 3rem;
 }
 
 @media screen and (max-width: 1400px) {
