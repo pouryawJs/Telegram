@@ -12,11 +12,15 @@ exports.getNameSpacesRooms = async (io) => {
 
 	namespaces.forEach((namespace) => {
 		io.of(namespace.href).on("connection", async (socket) => {
-			const mainNamespace = await NamespaceModel.findById(namespace._id);
+			let mainNamespace = await NamespaceModel.findById(namespace._id);
 
 			socket.emit("namespaceRooms", mainNamespace.rooms);
 
+			getMessages(socket, io);
+
 			socket.on("joining", async (newRoom) => {
+				mainNamespace = await NamespaceModel.findById(namespace._id);
+
 				const lastRoom = Array.from(socket.rooms)[1];
 				if (lastRoom) {
 					socket.leave(lastRoom);
@@ -29,8 +33,6 @@ exports.getNameSpacesRooms = async (io) => {
 					(room) => room.title === newRoom
 				);
 				socket.emit("roomInfo", newRoomInfo);
-
-				getMessages(socket);
 
 				socket.on("disconnect", async () => {
 					await getRoomOnlineUsers(io, mainNamespace.href, newRoom);
@@ -47,9 +49,9 @@ const getRoomOnlineUsers = async (io, href, room) => {
 		.emit("onlineUsersCount", Array.from(onlienUsers).length);
 };
 
-const getMessages = (socket) => {
+const getMessages = (socket, io) => {
 	socket.on("newMsg", async (data) => {
-		const { message, roomName } = data;
+		const { message, roomName, sender } = data;
 
 		const namespace = await NamespaceModel.findOne({
 			"rooms.title": roomName,
@@ -60,11 +62,15 @@ const getMessages = (socket) => {
 			{
 				$push: {
 					"rooms.$.messages": {
-						sender: "67f78872ae4f756ee589bc4e",
+						sender,
 						message,
 					},
 				},
 			}
 		);
+
+		io.of(namespace.href)
+			.in(roomName)
+			.emit("confirmMsg", { message, sender });
 	});
 };

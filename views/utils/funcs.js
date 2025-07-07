@@ -1,87 +1,90 @@
 let socket = null;
 let namespaceSocket = null;
 let roomName = "";
+let user = null;
 
-export const showNamespaces = (namespaces, socketConnection) => {
-  socket = socketConnection;
+export const showNamespaces = (namespaces, socketConnection, userInfo) => {
+	socket = socketConnection;
+	user = userInfo;
 
-  const chatCategories = document.querySelector(".sidebar__categories-list");
-  chatCategories.innerHTML = "";
+	const chatCategories = document.querySelector(".sidebar__categories-list");
+	chatCategories.innerHTML = "";
 
-  getNamespaceChats(namespaces[0].href);
+	getNamespaceChats(namespaces[0].href);
 
-  namespaces.forEach((namespace, index) => {
-    chatCategories.insertAdjacentHTML(
-      "beforeend",
-      `
+	namespaces.forEach((namespace, index) => {
+		chatCategories.insertAdjacentHTML(
+			"beforeend",
+			`
               <li data-title="${
-                namespace.title
-              }" class="sidebar__categories-item ${
-        index === 0 && "sidebar__categories-item--active"
-      }" data-category-name="all">
+					namespace.title
+				}" class="sidebar__categories-item ${
+				index === 0 && "sidebar__categories-item--active"
+			}" data-category-name="all">
                 <span class="sidebar__categories-text">${namespace.title}</span>
                 <!-- <span class="sidebar__categories-counter sidebar__counter">3</span> -->
             </li>
           `
-    );
-  });
+		);
+	});
 };
 
 export const showActiveNamespace = (namespaces) => {
-  let sidebarCategoriesItem = document.querySelectorAll(
-    ".sidebar__categories-item"
-  );
-  sidebarCategoriesItem.forEach((item) => {
-    item.addEventListener("click", function (e) {
-      const namespaceTitle = item.dataset.title;
-      const mainNamespace = namespaces.find(
-        (namespace) => namespace.title === namespaceTitle
-      );
+	let sidebarCategoriesItem = document.querySelectorAll(
+		".sidebar__categories-item"
+	);
 
-      getNamespaceChats(mainNamespace.href);
+	sidebarCategoriesItem.forEach((item) => {
+		item.addEventListener("click", function (e) {
+			const namespaceTitle = item.dataset.title;
+			const mainNamespace = namespaces.find(
+				(namespace) => namespace.title === namespaceTitle
+			);
 
-      let activeSidebarCategoriesItem = document.querySelector(
-        ".sidebar__categories-item.sidebar__categories-item--active"
-      );
+			getNamespaceChats(mainNamespace.href);
 
-      activeSidebarCategoriesItem.classList.remove(
-        "sidebar__categories-item--active"
-      );
+			let activeSidebarCategoriesItem = document.querySelector(
+				".sidebar__categories-item.sidebar__categories-item--active"
+			);
 
-      e.currentTarget.classList.add("sidebar__categories-item--active");
+			activeSidebarCategoriesItem.classList.remove(
+				"sidebar__categories-item--active"
+			);
 
-      let categoryName = e.currentTarget.dataset.categoryName;
-      let selectedCategory = document.querySelector(
-        `.data-category-${categoryName}`
-      );
-      let selectedCategoryActive = document.querySelector(
-        `.sidebar__contact.sidebar__contact--active`
-      );
-      selectedCategoryActive.classList.remove("sidebar__contact--active");
-      selectedCategory.classList.add("sidebar__contact--active");
-    });
-  });
+			e.currentTarget.classList.add("sidebar__categories-item--active");
+
+			let categoryName = e.currentTarget.dataset.categoryName;
+			let selectedCategory = document.querySelector(
+				`.data-category-${categoryName}`
+			);
+			let selectedCategoryActive = document.querySelector(
+				`.sidebar__contact.sidebar__contact--active`
+			);
+			selectedCategoryActive.classList.remove("sidebar__contact--active");
+			selectedCategory.classList.add("sidebar__contact--active");
+		});
+	});
 };
 
 export const getNamespaceChats = (namespaceHref) => {
-  if (namespaceSocket) namespaceSocket.close();
-  namespaceSocket = io(`http://localhost:4003${namespaceHref}`);
+	if (namespaceSocket) namespaceSocket.close();
+	namespaceSocket = io(`http://localhost:4003${namespaceHref}`);
 
-  namespaceSocket.on("connect", () => {
-    namespaceSocket.on("namespaceRooms", (rooms) => {
-      showNamespaceChats(rooms);
-    });
-  });
+	namespaceSocket.on("connect", () => {
+		namespaceSocket.on("namespaceRooms", (rooms) => {
+			showNamespaceChats(rooms);
+		});
+	});
 };
 
 export const showNamespaceChats = (rooms) => {
-  const chats = document.querySelector(".sidebar__contact-list");
-  chats.innerHTML = "";
+	const chats = document.querySelector(".sidebar__contact-list");
+	chats.innerHTML = "";
 
-  rooms.forEach((room) => {
-    chats.insertAdjacentHTML(
-      "beforeend",
-      `
+	rooms.forEach((room) => {
+		chats.insertAdjacentHTML(
+			"beforeend",
+			`
           <li class="sidebar__contact-item" data-room="${room.title}">
             <a class="sidebar__contact-link" href="#">
               <div class="sidebar__contact-left">
@@ -104,75 +107,141 @@ export const showNamespaceChats = (rooms) => {
             </a>
           </li>
       `
-    );
-  });
+		);
+	});
 
-  setClickOnChats();
+	setClickOnChats();
 };
 
 const setClickOnChats = () => {
-  const chats = document.querySelectorAll(".sidebar__contact-item");
-  chats.forEach((chat) => {
-    chat.addEventListener("click", () => {
-      roomName = chat.dataset.room;
-      namespaceSocket.emit("joining", roomName);
+	console.log("[setClickOnChats Ftuncion !!]");
+	const chats = document.querySelectorAll(".sidebar__contact-item");
+	chats.forEach((chat) => {
+		chat.addEventListener("click", () => {
+			roomName = chat.dataset.room;
+			namespaceSocket.emit("joining", roomName);
 
-      namespaceSocket.on("roomInfo", (roomInfo) => {
-        console.log("RoomInfo ->", roomInfo);
-        const chatHeader = document.querySelector(".chat__header");
-        chatHeader.classList.add("chat__header--active");
+			namespaceSocket.off("roomInfo");
+			namespaceSocket.on("roomInfo", (roomInfo) => {
+				console.log("RoomInfo ->", roomInfo);
+				const chatHeader = document.querySelector(".chat__header");
+				chatHeader.classList.add("chat__header--active");
 
-        const chatContent = document.querySelector(".chat__content");
-        chatContent.classList.add("chat__content--active");
+				const chatContent = document.querySelector(".chat__content");
+				chatContent.classList.add("chat__content--active");
 
-        const chatName = document.querySelector(".chat__header-name");
-        chatName.innerHTML = roomInfo.title;
+				const chatName = document.querySelector(".chat__header-name");
+				chatName.innerHTML = roomInfo.title;
 
-        const chatAvatar = document.querySelector(".chat__header-avatar");
-        chatAvatar.src = `http://localhost:4003/${roomInfo.image}`;
-      });
+				const chatAvatar = document.querySelector(
+					".chat__header-avatar"
+				);
+				chatAvatar.src = `http://localhost:4003/${roomInfo.image}`;
 
-      getAndShowRoomOnlineUsers();
-    });
-  });
+				const chatsContainer = document.querySelector(
+					".chat__content-main"
+				);
+				chatsContainer.innerHTML = "";
+
+				roomInfo.messages.forEach((item) => {
+					console.log(item.message);
+					if (item.sender === user._id) {
+						chatsContainer.insertAdjacentHTML(
+							"beforeend",
+							`
+                  <div class="chat__content-receiver-wrapper chat__content-wrapper">
+                    <div class="chat__content-receiver">
+                      <span class="chat__content-receiver-text">${item.message}</span>
+                      <span class="chat__content-chat-clock">17:55</span>
+                    </div>
+                  </div>
+              `
+						);
+					} else {
+						chatsContainer.insertAdjacentHTML(
+							"beforeend",
+							`
+                <div class="chat__content-sender-wrapper chat__content-wrapper">
+                  <div class="chat__content-sender">
+                    <span class="chat__content-sender-text">${item.message}</span>
+                    <span class="chat__content-chat-clock">17:55</span>
+                  </div>
+                </div>
+              `
+						);
+					}
+				});
+			});
+
+			getAndShowRoomOnlineUsers();
+		});
+	});
 };
 
 const getAndShowRoomOnlineUsers = () => {
-  namespaceSocket.on("onlineUsersCount", (count) => {
-    const chatOnlineUsersCount = document.querySelector(".chat__header-status");
-    chatOnlineUsersCount.innerHTML = `${count} Users online`;
+	namespaceSocket.on("onlineUsersCount", (count) => {
+		const chatOnlineUsersCount = document.querySelector(
+			".chat__header-status"
+		);
+		chatOnlineUsersCount.innerHTML = `${count} Users online`;
 
-    console.log("onlineUsersCount ->", count);
-  });
+		console.log("onlineUsersCount ->", count);
+	});
 };
 
 export const sendMessage = () => {
-  const msgInput = document.querySelector(".chat__content-bottom-bar-input");
-  const chatsContainer = document.querySelector(".chat__content-main");
+	const msgInput = document.querySelector(".chat__content-bottom-bar-input");
 
-  msgInput.addEventListener("keyup", (event) => {
-    const chatsContent = document.querySelector(".chat__content--active");
+	msgInput.addEventListener("keyup", (event) => {
+		if (event.keyCode === 13) {
+			const message = event.target.value.trim();
+			if (message) {
+				namespaceSocket.emit("newMsg", {
+					message,
+					roomName,
+					sender: user._id,
+				});
+				console.log("Msg Send Shod !!");
+				event.target.value = "";
+			}
+		}
+	});
+};
 
-    if (event.keyCode === 13) {
-      const message = event.target.value.trim();
-      if (message) {
-        console.log(message);
-        namespaceSocket.emit("newMsg", { message, roomName });
-        event.target.value = "";
-        chatsContainer.insertAdjacentHTML(
-          "beforeend",
-          `
-              <div class="chat__content-receiver-wrapper chat__content-wrapper">
-                <div class="chat__content-receiver">
-                  <span class="chat__content-receiver-text">${message}</span>
-                  <span class="chat__content-chat-clock">17:55</span>
+export const getMsg = () => {
+	console.log("GetMsg Function");
+	// const chatsContent = document.querySelector(".chat__content--active");
+	const chatsContainer = document.querySelector(".chat__content-main");
+
+	namespaceSocket.off("confirmMsg");
+	namespaceSocket.on("confirmMsg", (data) => {
+		console.log("New Msg ->", data);
+		if (data.sender === user._id) {
+			chatsContainer.insertAdjacentHTML(
+				"beforeend",
+				`
+                <div class="chat__content-receiver-wrapper chat__content-wrapper">
+                  <div class="chat__content-receiver">
+                    <span class="chat__content-receiver-text">${data.message}</span>
+                    <span class="chat__content-chat-clock">17:55</span>
+                  </div>
                 </div>
-              </div>
-          `
-        );
+            `
+			);
+		} else {
+			chatsContainer.insertAdjacentHTML(
+				"beforeend",
+				`
+                <div class="chat__content-sender-wrapper chat__content-wrapper">
+                  <div class="chat__content-sender">
+                    <span class="chat__content-sender-text">${data.message}</span>
+                    <span class="chat__content-chat-clock">17:55</span>
+                  </div>
+                </div>
+              `
+			);
+		}
 
-        chatsContent.scrollTo(0, chatsContent.scrollHeight);
-      }
-    }
-  });
+		// chatsContent.scrollTo(0, chatsContent.scrollHeight);
+	});
 };

@@ -8,7 +8,7 @@
 	</head>
 	<body>
 		<form class="box" action="" method="POST" target="_self">
-			<h1>Auth</h1>
+			<h1>login</h1>
 			<input
 				type="text"
 				name="name"
@@ -47,8 +47,6 @@
 					},
 					body: JSON.stringify(user),
 				});
-
-				console.log(res);
 
 				if (res.status === 201 || res.status === 200) {
 					const data = await res.json();

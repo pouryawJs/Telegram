@@ -1,25 +1,39 @@
 import {
-  showActiveNamespace,
-  showNamespaces,
-  sendMessage,
+	showActiveNamespace,
+	showNamespaces,
+	sendMessage,
+	getMsg,
 } from "../../utils/funcs.js";
 
 window.addEventListener("load", async () => {
-  // const res = await fetch("http://localhost:4003/apu/auth/me");
-  // if (res.status === 200) {
-  //   const user = await res.json();
-  //   console.log("User ->", user);
-  // }
+	const token = localStorage.getItem("token");
+	let user = null;
+	if (token) {
+		const res = await fetch("http://localhost:4003/api/auth/me", {
+			headers: {
+				authorization: `Bearer ${token}`,
+			},
+		});
 
-  const socket = io("http://localhost:4003");
+		if (res.status === 200) {
+			user = await res.json();
 
-  socket.on("connect", () => {
-    socket.on("bro", (data) => console.log("Bro Data"));
+			const socket = io("http://localhost:4003");
 
-    socket.on("namespaces", (namespaces) => {
-      showNamespaces(namespaces, socket);
-      showActiveNamespace(namespaces);
-      sendMessage();
-    });
-  });
+			socket.on("connect", () => {
+				// socket.on("bro", (data) => console.log("Bro Data"));
+
+				socket.on("namespaces", (namespaces) => {
+					showNamespaces(namespaces, socket, user);
+					showActiveNamespace(namespaces);
+					getMsg();
+					sendMessage();
+				});
+			});
+		} else {
+			location.href = "./pages/register.html";
+		}
+	} else {
+		location.href = "./pages/register.html";
+	}
 });
