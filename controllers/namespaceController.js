@@ -1,4 +1,5 @@
-const NamespaceModel = require("./../models/Chat");
+const NamespaceModel = require("./../models/Namespace");
+const RoomModel = require("./../models/Room");
 
 exports.getAll = async (req, res, next) => {
 	try {
@@ -44,7 +45,7 @@ exports.createRoom = async (req, res, next) => {
 			return res.status(404).json({ message: "namespace not found" });
 		}
 
-		const mainRoom = await NamespaceModel.findOne({ "rooms.title": title });
+		const mainRoom = await RoomModel.findOne({ title });
 
 		if (mainRoom) {
 			return res
@@ -57,9 +58,11 @@ exports.createRoom = async (req, res, next) => {
 		}
 		const room = { title, image: image ? image : undefined };
 
+		const newRoom = await RoomModel.create(room);
+
 		await NamespaceModel.findOneAndUpdate(
 			{ title: namespace },
-			{ $push: { rooms: room } }
+			{ $push: { rooms: newRoom._id } }
 		);
 
 		return res
