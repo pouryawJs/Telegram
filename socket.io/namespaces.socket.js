@@ -1,12 +1,18 @@
 const NamespaceModel = require("../models/Namespace");
+const RoomModel = require("../models/Room");
+const MessageModel = require("../models/Message");
+const MediaModel = require("../models/Media");
 const UserModel = require("./../models/User");
+
 const path = require("path");
 const fs = require("fs");
-const { Z_ASCII } = require("zlib");
+const { title } = require("process");
 
 exports.initConnection = (io) => {
 	io.on(`connection`, async (socket) => {
-		const namespaces = await NamespaceModel.find({}).sort({ _id: -1 });
+		const namespaces = await NamespaceModel.find({})
+			.populate("rooms")
+			.sort({ _id: -1 });
 		socket.emit(`namespaces`, namespaces);
 	});
 };
@@ -18,7 +24,7 @@ exports.getNameSpacesRooms = async (io) => {
 		io.of(namespace.href).on("connection", async (socket) => {
 			let mainNamespace = await NamespaceModel.findById(
 				namespace._id
-			).lean();
+			).populate("rooms");
 
 			socket.emit("namespaceRooms", mainNamespace.rooms);
 
@@ -26,7 +32,21 @@ exports.getNameSpacesRooms = async (io) => {
 			getMedia(socket, io);
 
 			socket.on("joining", async (newRoom) => {
-				mainNamespace = await NamespaceModel.findById(namespace._id);
+				mainNamespace = await NamespaceModel.findById(
+					namespace._id
+				).populate({
+					path: "rooms",
+					populate: [
+						{
+							path: "messages",
+							populate: { path: "sender", select: "username" },
+						},
+						{
+							path: "medias",
+							populate: { path: "sender", select: "username" },
+						},
+					],
+				});
 
 				const lastRoom = Array.from(socket.rooms)[1];
 				if (lastRoom) {
@@ -60,18 +80,22 @@ const getMessages = (socket, io) => {
 		const { message, roomName, senderID } = data;
 		const sender = await UserModel.findById(senderID);
 
+		const room = await RoomModel.findOne({ title: roomName });
+
 		const namespace = await NamespaceModel.findOne({
-			"rooms.title": roomName,
+			rooms: { $in: room._id },
 		});
 
-		await NamespaceModel.findOneAndUpdate(
-			{ _id: namespace._id, "rooms.title": roomName },
+		const newMessage = await MessageModel.create({
+			sender: sender._id,
+			message,
+		});
+
+		await RoomModel.updateOne(
+			{ _id: room._id },
 			{
 				$push: {
-					"rooms.$.messages": {
-						sender: sender._id,
-						message,
-					},
+					messages: newMessage._id,
 				},
 			}
 		);
@@ -88,9 +112,12 @@ const detectIsTyping = (socket, io) => {
 	socket.on("isTyping", async (data) => {
 		const { userID, roomName, isTyping } = data;
 
+		const room = await RoomModel.findOne({ title: roomName });
+
 		const namespace = await NamespaceModel.findOne({
-			"rooms.title": roomName,
+			rooms: { $in: room._id },
 		});
+
 		const user = await UserModel.findById(userID);
 
 		io.of(namespace.href)
@@ -104,8 +131,11 @@ const detectIsTyping = (socket, io) => {
 const getMedia = (socket, io) => {
 	socket.on("newMedia", async (data) => {
 		const { filename, file, senderID, roomName } = data;
+
+		const room = await RoomModel.findOne({ title: roomName });
+
 		const namespace = await NamespaceModel.findOne({
-			"rooms.title": roomName,
+			rooms: { $in: room._id },
 		});
 		const sender = await UserModel.findById(senderID);
 
@@ -114,20 +144,23 @@ const getMedia = (socket, io) => {
 
 		fs.writeFile(`public/${mediaPath}`, file, async (err) => {
 			if (!err) {
-				await NamespaceModel.findOneAndUpdate(
-					{ _id: namespace._id, "rooms.title": roomName },
+				const newMedia = await MediaModel.create({
+					sender: senderID,
+					path: mediaPath,
+				});
+
+				await RoomModel.findOneAndUpdate(
+					{ _id: room._id },
 					{
 						$push: {
-							"rooms.$.medias": {
-								sender,
-								path: mediaPath,
-							},
+							medias: newMedia._id,
 						},
 					}
 				);
+
 				io.of(namespace.href)
 					.in(roomName)
-					.emit("confirmMedia", { sender, message });
+					.emit("confirmMedia", { sender, path: mediaPath });
 			}
 		});
 	});

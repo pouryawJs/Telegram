@@ -29,7 +29,6 @@ const getNamespaceChats = (href) => {
 	namespaceSocket = io(`http://localhost:4003${href}`);
 	namespaceSocket.on("connect", () => {
 		namespaceSocket.on("namespaceRooms", (rooms) => {
-			console.log("Rooms ->", rooms);
 			showActiveCategoryRooms(rooms);
 		});
 	});
@@ -127,7 +126,6 @@ const setClickOnRooms = () => {
 
 			namespaceSocket.off("roomInfo");
 			namespaceSocket.on("roomInfo", (roomInfo) => {
-				console.log("RoomInfo ->", roomInfo);
 				const chatContent = document.querySelector(".chat__content");
 				chatContent.classList.add("chat__content--active");
 
@@ -143,7 +141,7 @@ const setClickOnRooms = () => {
 				chatProfile.src = `http://localhost:4003/${roomInfo.image}`;
 
 				chatsContainer.innerHTML = "";
-				console.log(roomInfo);
+
 				sideBarParent.classList.toggle("sideBar-hide");
 				mainConainer.classList.toggle("container-hide");
 
@@ -226,7 +224,6 @@ export const getMsg = () => {
 	const chatsContainer = document.querySelector(".chat__content-main");
 
 	namespaceSocket.on("confirmMsg", (data) => {
-		console.log(user);
 		if (data.sender._id === user._id) {
 			chatsContainer.insertAdjacentHTML(
 				"beforeend",
@@ -299,10 +296,8 @@ export const sendFile = () => {
 	const fileInput = document.querySelector("#file-input");
 
 	fileInput.addEventListener("change", (event) => {
-		console.log(event.target.files);
-
 		namespaceSocket.emit("newMedia", {
-			sender: user._id,
+			senderID: user._id,
 			roomName,
 			file: event.target.files[0],
 			filename: event.target.files[0].name,

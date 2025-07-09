@@ -7,7 +7,6 @@ exports.auth = async (req, res, next) => {
 
 		let user = await UserModel.findOne({ username, password });
 		let statusCode = 200;
-		console.log(user);
 		if (!user) {
 			user = await UserModel.create({ username, password });
 			statusCode = 201;
