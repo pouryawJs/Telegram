@@ -1,7 +1,8 @@
-const NamespaceModel = require("./../models/Chat");
+const NamespaceModel = require("../models/Namespace");
 const UserModel = require("./../models/User");
 const path = require("path");
 const fs = require("fs");
+const { Z_ASCII } = require("zlib");
 
 exports.initConnection = (io) => {
 	io.on(`connection`, async (socket) => {
@@ -15,7 +16,9 @@ exports.getNameSpacesRooms = async (io) => {
 
 	namespaces.forEach((namespace) => {
 		io.of(namespace.href).on("connection", async (socket) => {
-			let mainNamespace = await NamespaceModel.findById(namespace._id);
+			let mainNamespace = await NamespaceModel.findById(
+				namespace._id
+			).lean();
 
 			socket.emit("namespaceRooms", mainNamespace.rooms);
 
@@ -30,7 +33,6 @@ exports.getNameSpacesRooms = async (io) => {
 					socket.leave(lastRoom);
 					await getRoomOnlineUsers(io, mainNamespace.href, lastRoom);
 				}
-
 				socket.join(newRoom);
 				await getRoomOnlineUsers(io, mainNamespace.href, newRoom);
 				const newRoomInfo = mainNamespace.rooms.find(
@@ -55,7 +57,8 @@ const getRoomOnlineUsers = async (io, href, room) => {
 
 const getMessages = (socket, io) => {
 	socket.on("newMsg", async (data) => {
-		const { message, roomName, sender } = data;
+		const { message, roomName, senderID } = data;
+		const sender = await UserModel.findById(senderID);
 
 		const namespace = await NamespaceModel.findOne({
 			"rooms.title": roomName,
@@ -66,7 +69,7 @@ const getMessages = (socket, io) => {
 			{
 				$push: {
 					"rooms.$.messages": {
-						sender,
+						sender: sender._id,
 						message,
 					},
 				},
@@ -100,10 +103,12 @@ const detectIsTyping = (socket, io) => {
 
 const getMedia = (socket, io) => {
 	socket.on("newMedia", async (data) => {
-		const { filename, file, sender, roomName } = data;
+		const { filename, file, senderID, roomName } = data;
 		const namespace = await NamespaceModel.findOne({
 			"rooms.title": roomName,
 		});
+		const sender = await UserModel.findById(senderID);
+
 		const ext = path.extname(filename);
 		const mediaPath = `/uploads/${String(Date.now() + ext)}`;
 
@@ -120,7 +125,9 @@ const getMedia = (socket, io) => {
 						},
 					}
 				);
-				io.of(namespace.href).in(roomName).emit("confirmMedia", data);
+				io.of(namespace.href)
+					.in(roomName)
+					.emit("confirmMedia", { sender, message });
 			}
 		});
 	});
